@@ -5,7 +5,7 @@ inputs:
   github-token:
     description: GitHub Token
     required: false
-    default: ${{ secrets.GITHUB_TOKEN }}
+    default: ''
   detekt-command:
     description: How to run detekt
     required: false
