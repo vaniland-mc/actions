@@ -1,0 +1,58 @@
+name: Run detekt
+description: Detekt
+
+inputs:
+  github-token:
+    description: GitHub Token
+    required: false
+    default: ${{ secrets.GITHUB_TOKEN }}
+  detekt-command:
+    description: How to run detekt
+    required: false
+    default: ./gradlew detekt
+  report-xml-path:
+    description: Report xml file path
+    required: false
+    default: "build/reports/detekt/report.xml"
+  report-sarif-path:
+    description: Report sarif file path
+    required: false
+    default: "build/reports/detekt/report.sarif"
+  reviewdog-reporter:
+    description: reviewdog reporter
+    required: false
+    default: github-check
+
+runs:
+  using: composite
+  steps:
+    - name: Setup JDK 17
+      uses: graalvm/setup-graalvm@v1
+      with:
+        version: "latest"
+        java-version: "17"
+        github-token: ${{ inputs.github-token }}
+    - name: Cache gradle
+      uses: gradle/gradle-build-action@v2
+    - name: Validate gradle wrapper
+      uses: gradle/wrapper-validation-action@v1
+    - name: Run detekt
+      shell: bash
+      run: ${{ inputs.detekt-command }}
+    - name: Setup reviewdog
+      if: always()
+      uses: reviewdog/action-setup@v1
+    - name: Run reviewdog
+      if: always()
+      shell: bash
+      run: |
+        cat ${{ inputs.report-xml-path }} | \
+          reviewdog -level=warning -f=checkstyle -name=detekt -reporter=${{ inputs.reviewdog-reporter }}
+      env:
+        REVIEWDOG_GITHUB_API_TOKEN: ${{ inputs.github-token }}
+    - name: Upload results to GitHub repository
+      if: always()
+      uses: github/codeql-action/upload-sarif@v2
+      with:
+        sarif_file: ${{ inputs.report-sarif-path }}
+        checkout_path: ${{ github.workspace }}
