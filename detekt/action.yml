@@ -52,7 +52,7 @@ runs:
         REVIEWDOG_GITHUB_API_TOKEN: ${{ inputs.github-token }}
     - name: Upload results to GitHub repository
       if: always()
-      uses: github/codeql-action/upload-sarif@v2
+      uses: github/codeql-action/upload-sarif@v3
       with:
         sarif_file: ${{ inputs.report-sarif-path }}
         checkout_path: ${{ github.workspace }}
